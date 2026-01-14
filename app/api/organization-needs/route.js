@@ -9,6 +9,37 @@ export async function GET(request) {
     try {
         await connectDB();
         
+        // Ensure test organizations exist
+        const testOrg1 = await OrganizationNeed.findOne({ organizationName: 'Test Organization 1' });
+        if (!testOrg1) {
+            const newTestOrg1 = new OrganizationNeed({
+                organizationName: 'Test Organization 1',
+                description: 'A test organization that helps provide essential items to those in need in our community.',
+                requiredItems: [
+                    { name: 'Menstrual Products', notes: 'Pads and tampons of all sizes needed' },
+                    { name: 'Food / Canned Goods', notes: 'Non-perishable food items preferred' },
+                    { name: 'Clothing', notes: 'All sizes, especially winter clothing' }
+                ],
+                isActive: true
+            });
+            await newTestOrg1.save();
+        }
+
+        const testOrg2 = await OrganizationNeed.findOne({ organizationName: 'Test Organization 2' });
+        if (!testOrg2) {
+            const newTestOrg2 = new OrganizationNeed({
+                organizationName: 'Test Organization 2',
+                description: 'A test organization that helps provide essential items to those in need in our community.',
+                requiredItems: [
+                    { name: 'Menstrual Products', notes: 'Pads and tampons of all sizes needed' },
+                    { name: 'Food / Canned Goods', notes: 'Non-perishable food items preferred' },
+                    { name: 'Clothing', notes: 'All sizes, especially winter clothing' }
+                ],
+                isActive: true
+            });
+            await newTestOrg2.save();
+        }
+        
         const needs = await OrganizationNeed.find({ isActive: true })
             .sort({ organizationName: 1 });
         

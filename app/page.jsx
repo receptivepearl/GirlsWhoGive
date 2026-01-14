@@ -5,6 +5,7 @@ import EnhancedNavbar from "@/components/EnhancedNavbar";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
+import GallerySection from "@/components/GallerySection";
 import { useAppContext } from "@/context/AppContext";
 
 const Home = () => {
@@ -47,6 +48,9 @@ const Home = () => {
           user={user}
           userRole={userRole}
         />
+        
+        {/* Gallery Section */}
+        <GallerySection />
         
         {/* Features Section */}
         <FeaturesSection />

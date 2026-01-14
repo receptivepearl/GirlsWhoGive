@@ -119,7 +119,7 @@ const HeroSection = ({ onRoleSelection, user, userRole }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-sm sm:text-sm md:text-base text-black leading-relaxed"
+                className="text-[calc(0.875rem*1.1)] sm:text-[calc(0.875rem*1.1)] md:text-[calc(1rem*1.1)] text-black leading-relaxed"
               >
                 Simplified donation tracking for nonprofits and community organizations.
                 Our platform makes it easy for donors to let organizations know exactly what they're bringing—whether it's food, clothing, books, or other in-kind items—before they arrive. Organizations can track commitments, record in-person donations in seconds, and view clear monthly totals without spreadsheets or manual guesswork. Everything stays organized in one place, so nonprofits spend less time managing donations and more time making an impact.

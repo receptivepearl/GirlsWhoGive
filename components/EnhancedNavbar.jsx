@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import { useClerk, UserButton } from "@clerk/nextjs";
@@ -9,6 +10,7 @@ import Logo from "./Logo";
 const EnhancedNavbar = () => {
   const { user, userRole } = useAppContext();
   const { openSignIn } = useClerk();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -28,8 +30,7 @@ const EnhancedNavbar = () => {
         { href: "/", label: "Home" },
         { href: "/about", label: "About" },
         { href: "/discover", label: "Discover" },
-        { href: "/organization-needs", label: "Organization Needs" },
-        { href: "/connect", label: "Connect" }
+        { href: "/organization-needs", label: "Organization Needs" }
       ];
     }
 
@@ -62,8 +63,7 @@ const EnhancedNavbar = () => {
           { href: "/", label: "Home" },
           { href: "/about", label: "About" },
           { href: "/discover", label: "Discover" },
-          { href: "/organization-needs", label: "Organization Needs" },
-          { href: "/connect", label: "Connect" }
+          { href: "/organization-needs", label: "Organization Needs" }
         ];
     }
   };
@@ -154,17 +154,30 @@ const EnhancedNavbar = () => {
                 </motion.div>
               </motion.div>
             ) : (
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={openSignIn}
-                className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-medium hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Sign In
-              </motion.button>
+              <>
+                <motion.button
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push('/connect')}
+                  className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Create Account
+                </motion.button>
+                <motion.button
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={openSignIn}
+                  className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-medium hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Sign In
+                </motion.button>
+              </>
             )}
 
             {/* Mobile menu button */}
@@ -220,6 +233,33 @@ const EnhancedNavbar = () => {
                     </Link>
                   </motion.div>
                 ))}
+                {!user && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: navigationItems.length * 0.1 }}
+                    className="pt-4 border-t border-gray-200 space-y-2"
+                  >
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        router.push('/connect');
+                      }}
+                      className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200"
+                    >
+                      Create Account
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        openSignIn();
+                      }}
+                      className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:from-pink-600 hover:to-purple-700 transition-all duration-200"
+                    >
+                      Sign In
+                    </button>
+                  </motion.div>
+                )}
                 {user && (
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}

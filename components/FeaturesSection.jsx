@@ -43,7 +43,7 @@ const FeaturesSection = () => {
   ];
 
   return (
-    <section ref={ref} className="py-20 px-6 md:px-16 lg:px-32">
+    <section ref={ref} className="pt-8 pb-20 px-6 md:px-16 lg:px-32">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <motion.div

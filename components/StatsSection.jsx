@@ -52,7 +52,7 @@ const StatsSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [stats, setStats] = useState([
     { number: 0, suffix: '', label: 'Organizations', icon: '🏢' },
-    { number: 0, suffix: '+', label: 'Products Donated', icon: '📦' }
+    { number: 2300, suffix: '+', label: 'Products Donated', icon: '📦' }
   ]);
   const [loading, setLoading] = useState(true);
 
@@ -64,11 +64,16 @@ const StatsSection = () => {
           const data = response.data.stats;
           setStats([
             { number: data.totalOrganizations, suffix: '', label: 'Organizations', icon: '🏢' },
-            { number: data.totalProductsDonated, suffix: '+', label: 'Products Donated', icon: '📦' }
+            { number: 2300, suffix: '+', label: 'Products Donated', icon: '📦' }
           ]);
         }
       } catch (error) {
         console.error('Error fetching stats:', error);
+        // Set default values if API fails
+        setStats([
+          { number: 0, suffix: '', label: 'Organizations', icon: '🏢' },
+          { number: 2300, suffix: '+', label: 'Products Donated', icon: '📦' }
+        ]);
       } finally {
         setLoading(false);
       }
@@ -136,7 +141,7 @@ const StatsSection = () => {
                 <div className="relative z-10 text-center">
                   {/* Icon */}
                   <motion.div
-                    whileHover={{ rotate: 360, scale: 1.1 }}
+                    whileHover={{ scale: 1.1 }}
                     transition={{ duration: 0.6 }}
                     className="text-3xl mb-4"
                   >

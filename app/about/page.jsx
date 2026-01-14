@@ -6,7 +6,6 @@ import { useRef } from "react";
 import axios from "axios";
 import EnhancedNavbar from "@/components/EnhancedNavbar";
 import Footer from "@/components/Footer";
-import StatsSection from "@/components/StatsSection";
 
 const About = () => {
   const bioRef = useRef(null);
@@ -199,11 +198,6 @@ const About = () => {
               </div>
             </motion.div>
 
-            {/* Impact in Numbers Section */}
-            <div className="mb-16">
-              <StatsSection />
-            </div>
-
             {/* Mission Section */}
             <motion.div
               ref={missionRef}
@@ -248,7 +242,6 @@ const About = () => {
                     className="text-center group"
                   >
                     <motion.div
-                      whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.6 }}
                       className={`w-20 h-20 bg-gradient-to-br ${item.gradient} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow`}
                     >
