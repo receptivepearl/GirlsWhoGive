@@ -1,6 +1,9 @@
 'use client'
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useAppContext } from '@/context/AppContext';
+import axios from 'axios';
 
 const OrganizationNeedsModal = ({ 
   isOpen, 
@@ -10,8 +13,11 @@ const OrganizationNeedsModal = ({
   onSave, 
   onDelete 
 }) => {
+  const router = useRouter();
+  const { user } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
   const [editedNeed, setEditedNeed] = useState(null);
+  const [isFindingOrg, setIsFindingOrg] = useState(false);
 
   React.useEffect(() => {
     if (organizationNeed) {
@@ -87,6 +93,42 @@ const OrganizationNeedsModal = ({
     if (confirm(`Are you sure you want to delete needs for ${organizationNeed.organizationName}?`)) {
       await onDelete(organizationNeed._id);
       onClose();
+    }
+  };
+
+  const handleDonate = async () => {
+    if (!organizationNeed || !organizationNeed.organizationName) return;
+    
+    if (!user) {
+      router.push('/connect?role=donor');
+      return;
+    }
+
+    try {
+      setIsFindingOrg(true);
+      // Find organization by name
+      const response = await axios.get('/api/organizations/all');
+      if (response.data.success) {
+        const organizations = response.data.organizations;
+        const org = organizations.find(
+          o => o.name.toLowerCase() === organizationNeed.organizationName.toLowerCase()
+        );
+        
+        if (org && org.verified) {
+          // Navigate to place order page
+          router.push(`/donor/place-order?orgId=${org._id}`);
+          onClose();
+        } else if (org && !org.verified) {
+          alert('This organization is not yet verified. Please contact them directly.');
+        } else {
+          alert('Organization not found. Please use the Discover page to find verified organizations.');
+        }
+      }
+    } catch (error) {
+      console.error('Error finding organization:', error);
+      alert('Error finding organization. Please try again.');
+    } finally {
+      setIsFindingOrg(false);
     }
   };
 
@@ -240,29 +282,53 @@ const OrganizationNeedsModal = ({
             )}
           </div>
 
-          {/* Action Buttons (Admin only, when editing) */}
-          {isAdmin && isEditing && (
-            <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+          {/* Action Buttons */}
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+            {/* Donate Button (shown when not editing and not admin) */}
+            {!isAdmin && !isEditing && (
               <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditedNeed({
-                    ...organizationNeed,
-                    requiredItems: [...organizationNeed.requiredItems]
-                  });
-                }}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                onClick={handleDonate}
+                disabled={isFindingOrg}
+                className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Cancel
+                {isFindingOrg ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647A7.962 7.962 0 0112 20a7.962 7.962 0 01-3-2.647z"></path>
+                    </svg>
+                    Finding...
+                  </>
+                ) : (
+                  'Donate'
+                )}
               </button>
-              <button
-                onClick={handleSave}
-                className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
-              >
-                Save Changes
-              </button>
-            </div>
-          )}
+            )}
+            
+            {/* Admin Edit Mode Buttons */}
+            {isAdmin && isEditing && (
+              <>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditedNeed({
+                      ...organizationNeed,
+                      requiredItems: [...organizationNeed.requiredItems]
+                    });
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </>
+            )}
+          </div>
         </motion.div>
       </div>
     </AnimatePresence>
