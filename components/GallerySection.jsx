@@ -8,6 +8,7 @@ const GallerySection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   
   const slideshowImages = [
+    "/App Picture #4.png",
     "/App Photo - School Drive.png",
     "/Gallery Test Image 1.jpeg",
     "/Gallery Test Image 3.jpeg"
@@ -26,7 +27,7 @@ const GallerySection = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
-    }, 5000); // Change slide every 5 seconds
+    }, 8000); // Change slide every 8 seconds
 
     return () => clearInterval(interval);
   }, [slideshowImages.length]);
