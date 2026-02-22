@@ -1,1 +1,1 @@
-
+GirlsWhoGive is a youth-led donation tracking and nonprofit discovery platform built to connect donors directly with high-impact, women-centered organizations. The platform streamlines how individuals find, verify, and support causes—especially GirlUp chapters and period-supply initiatives—through transparent tracking, curated listings, and scalable donation logistics. Designed with a focus on accessibility, accountability, and social impact, GirlsWhoGive aims to modernize grassroots giving and empower young changemakers to fund and grow mission-driven work globally.
