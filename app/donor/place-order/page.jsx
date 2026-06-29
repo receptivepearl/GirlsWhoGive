@@ -10,8 +10,10 @@ const PlaceOrderContent = () => {
   const searchParams = useSearchParams();
   const { user, userRole, createDonation } = useAppContext();
   const orgId = searchParams.get('orgId');
+  const driveId = searchParams.get('driveId');
   
   const [organization, setOrganization] = useState(null);
+  const [drive, setDrive] = useState(null);
   const [orderItems, setOrderItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -59,6 +61,19 @@ const PlaceOrderContent = () => {
         const org = await fetchOrganization(orgId);
         if (org) {
           setOrganization(org);
+          if (driveId) {
+            try {
+              const driveRes = await fetch(`/api/drives/${driveId}`);
+              const driveData = await driveRes.json();
+              if (driveData.success && driveData.drive.organizationId === orgId) {
+                setDrive(driveData.drive);
+              } else {
+                router.push(`/donor/place-order?orgId=${orgId}`);
+              }
+            } catch (error) {
+              console.error('Error fetching drive:', error);
+            }
+          }
         } else {
           router.push('/donor/discover');
         }
@@ -69,7 +84,7 @@ const PlaceOrderContent = () => {
     };
 
     loadOrganization();
-  }, [orgId, router, user, userRole]);
+  }, [orgId, driveId, router, user, userRole]);
 
   const addItem = (productType) => {
     setOrderItems(prev => {
@@ -171,6 +186,9 @@ const PlaceOrderContent = () => {
       formData.append('status', 'pending');
       formData.append('donorName', user.firstName + ' ' + user.lastName);
       formData.append('donorEmail', user.emailAddresses[0].emailAddress);
+      if (driveId) {
+        formData.append('driveId', driveId);
+      }
       
       // Add image if selected
       if (selectedImage) {
@@ -236,9 +254,22 @@ const PlaceOrderContent = () => {
               Create Donation Commitment
             </h1>
             <p className="text-lg text-gray-600">
-              Commit to donating menstrual products to {organization.name}
+              Commit to donating in-kind items to {organization.name}
+              {drive && ` — ${drive.name}`}
             </p>
           </div>
+
+          {drive && (
+            <div className="bg-purple-50 border-2 border-purple-200 rounded-3xl p-6 mb-8">
+              <h2 className="text-xl font-bold text-purple-900 mb-2">🎯 Donation Drive: {drive.name}</h2>
+              <p className="text-purple-800 text-sm mb-3">
+                Goal: {drive.currentAmount} / {drive.goalAmount} items collected
+              </p>
+              {drive.comments && (
+                <p className="text-sm text-purple-700">{drive.comments}</p>
+              )}
+            </div>
+          )}
 
           {/* Organization Info */}
           <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-pink-100 mb-8">

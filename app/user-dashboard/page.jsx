@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { locationService } from "@/lib/locationService";
+import { MISSION_STATEMENT } from "@/config/missionStatement";
 
 const UserDashboard = () => {
   const router = useRouter();
@@ -204,16 +205,12 @@ const UserDashboard = () => {
       
       <div className="space-y-6 text-lg text-gray-700">
         <p>
-          GirlsWhoGive is a platform dedicated to ending period poverty by connecting 
-          compassionate donors with organizations that serve women in need. We believe that 
-          access to menstrual products is a fundamental right, not a privilege.
+          {MISSION_STATEMENT}
         </p>
         
         <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Our Mission</h3>
         <p>
-          To create a world where no woman has to choose between basic necessities and 
-          menstrual hygiene products. We facilitate donations to women's shelters, 
-          community health centers, and nonprofit organizations that support underserved communities.
+          We help donors and organizations coordinate in-kind giving—food, clothing, books, and more—so every contribution reaches the people who need it.
         </p>
 
         <h3 className="text-2xl font-bold text-gray-900 mt-8 mb-4">How It Works</h3>
@@ -230,7 +227,7 @@ const UserDashboard = () => {
               <span className="text-2xl">💝</span>
             </div>
             <h4 className="font-semibold text-gray-900 mb-2">Make Donations</h4>
-            <p className="text-gray-600">Place orders for menstrual products that go directly to organizations</p>
+            <p className="text-gray-600">Commit to donating in-kind items that go directly to organizations</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -297,7 +294,7 @@ const UserDashboard = () => {
               Find Organizations Near You
             </h1>
             <p className="text-lg text-gray-600">
-              Discover local organizations that accept menstrual product donations
+              Discover local organizations that accept in-kind donations
             </p>
           </div>
 

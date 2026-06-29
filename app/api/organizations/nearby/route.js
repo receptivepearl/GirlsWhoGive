@@ -43,66 +43,71 @@ export async function GET(request) {
         // 2. INTEGRATION: If not 'verifiedOnly', fetch Google Places
         if (!verifiedOnly) {
             try {
-                // Modify query based on donation type
-                const mapsQuery = donationType 
-                    ? getGoogleMapsQuery(donationType, query)
-                    : (query || 'women shelter, homeless shelter, community center, food bank, donation center');
-                
-                // Search for nearby places, using the modified query
-                const nearbyPlaces = await locationService.searchNearbyPlaces(
-                    { lat, lng }, 
-                    mapsQuery, 
-                    radius
-                );
-
-                // Fetch details and format (limit to 15 to reduce load)
-                const placePromises = nearbyPlaces.slice(0, 15).map(async (place) => {
-                    try {
-                        const details = await locationService.getPlaceDetails(place.place_id);
-                        return locationService.formatPlaceData(details);
-                    } catch (error) {
-                        return locationService.formatPlaceData(place);
-                    }
-                });
-
-                googlePlaces = await Promise.all(placePromises);
-                
-                // Filter Google Places by donation type (permissive matching)
-                if (donationType) {
-                    googlePlaces = googlePlaces.filter(place => 
-                        organizationAcceptsDonationType(place, donationType)
-                    );
+                // Check if API key is configured
+                if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+                    console.warn('⚠️ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set. Google Places results will not be available.');
+                } else {
+                    // Modify query based on donation type
+                    const mapsQuery = donationType 
+                        ? getGoogleMapsQuery(donationType, query)
+                        : (query || 'women shelter, homeless shelter, community center, food bank, donation center');
                     
-                    // FALLBACK: If filtering results in zero Google Places, be more permissive
-                    // This ensures we show relevant results even if exact matching fails
-                    if (googlePlaces.length === 0 && nearbyPlaces.length > 0) {
-                        const acceptedTypes = getOrganizationTypesForDonationType(donationType);
-                        
-                        // Fallback: show places that match any of the organization types
-                        googlePlaces = await Promise.all(
-                            nearbyPlaces.slice(0, 15).map(async (place) => {
-                                try {
-                                    const details = await locationService.getPlaceDetails(place.place_id);
-                                    return locationService.formatPlaceData(details);
-                                } catch (error) {
-                                    return locationService.formatPlaceData(place);
-                                }
-                            })
+                    // Search for nearby places, using the modified query
+                    const nearbyPlaces = await locationService.searchNearbyPlaces(
+                        { lat, lng }, 
+                        mapsQuery, 
+                        radius
+                    );
+
+                    // Fetch details and format (limit to 15 to reduce load)
+                    const placePromises = nearbyPlaces.slice(0, 15).map(async (place) => {
+                        try {
+                            const details = await locationService.getPlaceDetails(place.place_id);
+                            return locationService.formatPlaceData(details);
+                        } catch (error) {
+                            return locationService.formatPlaceData(place);
+                        }
+                    });
+
+                    googlePlaces = await Promise.all(placePromises);
+                    
+                    // Filter Google Places by donation type (permissive matching)
+                    if (donationType) {
+                        googlePlaces = googlePlaces.filter(place => 
+                            organizationAcceptsDonationType(place, donationType)
                         );
                         
-                        // Filter by type matching (more permissive)
-                        googlePlaces = googlePlaces.filter(place => {
-                            if (!place.types) return false;
-                            const orgTypes = place.types.map(t => t.toLowerCase());
-                            return acceptedTypes.some(type => 
-                                orgTypes.some(ot => ot.includes(type.toLowerCase()))
+                        // FALLBACK: If filtering results in zero Google Places, be more permissive
+                        // This ensures we show relevant results even if exact matching fails
+                        if (googlePlaces.length === 0 && nearbyPlaces.length > 0) {
+                            const acceptedTypes = getOrganizationTypesForDonationType(donationType);
+                            
+                            // Fallback: show places that match any of the organization types
+                            googlePlaces = await Promise.all(
+                                nearbyPlaces.slice(0, 15).map(async (place) => {
+                                    try {
+                                        const details = await locationService.getPlaceDetails(place.place_id);
+                                        return locationService.formatPlaceData(details);
+                                    } catch (error) {
+                                        return locationService.formatPlaceData(place);
+                                    }
+                                })
                             );
-                        });
+                            
+                            // Filter by type matching (more permissive)
+                            googlePlaces = googlePlaces.filter(place => {
+                                if (!place.types) return false;
+                                const orgTypes = place.types.map(t => t.toLowerCase());
+                                return acceptedTypes.some(type => 
+                                    orgTypes.some(ot => ot.includes(type.toLowerCase()))
+                                );
+                            });
+                        }
                     }
                 }
-                
             } catch (error) {
-                console.error('Error fetching Google Places:', error);
+                console.error('❌ Error fetching Google Places:', error.message || error);
+                // Continue execution - we'll still show MongoDB organizations
             }
         }
 

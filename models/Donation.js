@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
 const donationSchema = new mongoose.Schema({
-    donorId: {type: String, required: true, ref: 'user'},
+    donorId: { type: String, default: 'guest', ref: 'user' },
+    isGuestDonation: { type: Boolean, default: false },
     organizationId: {type: String, required: true, ref: 'organization'},
     items: [{
         productType: {type: String, required: true},
@@ -14,6 +15,7 @@ const donationSchema = new mongoose.Schema({
     donorName: {type: String, required: true},
     donorEmail: {type: String, required: true},
     organizationName: {type: String, required: true},
+    driveId: {type: String, default: null},
     date: {type: Number, required: true},
     notes: {type: String, default: ''},
     // SINGLE SOURCE OF TRUTH: Cloudinary image metadata

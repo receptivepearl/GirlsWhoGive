@@ -332,7 +332,7 @@ const AdminDashboard = () => {
           </div>
           <div>
             <h4 className="font-semibold text-gray-900 mb-2">📈 Growth Tracking</h4>
-            <p className="text-gray-600">Track the growth of our community and the impact on period poverty</p>
+            <p className="text-gray-600">Track the growth of our community and the impact of in-kind giving</p>
           </div>
         </div>
 

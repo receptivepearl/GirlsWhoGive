@@ -5,6 +5,7 @@ import EnhancedNavbar from "@/components/EnhancedNavbar";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
+import HomeGallerySection from "@/components/HomeGallerySection";
 import { useAppContext } from "@/context/AppContext";
 
 const Home = () => {
@@ -50,6 +51,9 @@ const Home = () => {
         
         {/* Features Section */}
         <FeaturesSection />
+
+        {/* Community gallery — visible for all visitors */}
+        <HomeGallerySection />
       </div>
       <Footer />
     </>

@@ -199,7 +199,7 @@ const PlaceOrderContent = () => {
               Place Your Donation Order
             </h1>
             <p className="text-lg text-gray-600">
-              Help make a difference by donating menstrual products
+              Help make a difference by donating in-kind items to organizations in need
             </p>
           </div>
 

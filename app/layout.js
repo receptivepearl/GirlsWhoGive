@@ -7,13 +7,13 @@ import { ClerkProvider } from "@clerk/nextjs";
 const outfit = Outfit({ subsets: ['latin'], weight: ["300", "400", "500"] })
 
 export const metadata = {
-  title: "GirlsWhoGive - Period Product Donations",
-  description: "Connecting donors with organizations to provide menstrual products to those in need",
+  title: "GirlsWhoGive - In-Kind Donation Tracking",
+  description: "Simplified donation tracking for nonprofits and community organizations. Coordinate food, clothing, books, and other in-kind donations in one place.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
       <html lang="en">
         <head>
           <script

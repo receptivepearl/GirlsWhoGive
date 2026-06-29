@@ -37,7 +37,7 @@ const FeaturesSection = () => {
         </svg>
       ),
       title: "Transform",
-      description: "Help end period poverty together",
+      description: "Help communities give and receive with confidence",
       gradient: "from-indigo-500 to-blue-500"
     }
   ];

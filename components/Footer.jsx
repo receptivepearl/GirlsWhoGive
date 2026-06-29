@@ -15,9 +15,9 @@ const Footer = () => {
             </span>
           </div>
           <p className="text-xs text-gray-700">
-            GirlsWhoGive connects donors with verified organizations to
-            provide essential menstrual products to people in need. Together,
-            we make dignity accessible—one donation at a time.
+            GirlsWhoGive connects donors with verified nonprofits and community organizations to
+            streamline in-kind giving—food, clothing, books, and more. Together,
+            we help communities give with confidence and make a real impact.
           </p>
         </div>
 
@@ -32,7 +32,7 @@ const Footer = () => {
                 <a className="hover:text-pink-600 transition-colors" href="/about">About</a>
               </li>
               <li>
-                <a className="hover:text-pink-600 transition-colors" href="/connect">Connect</a>
+                <a className="hover:text-pink-600 transition-colors" href="/connect">Create Account</a>
               </li>
               <li>
                 <a className="hover:text-pink-600 transition-colors" href="/donor/discover">Discover</a>
@@ -41,19 +41,17 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="w-1/2 flex items-start justify-start md:justify-center">
-          <div>
-            <h2 className="font-medium text-gray-800 mb-3 text-sm">Get in touch</h2>
-            <div className="text-xs space-y-1 text-gray-700">
-              <p>+1 (555) 123-4567</p>
-              <p>support@girlswhogive.org</p>
-            </div>
-          </div>
-        </div>
       </div>
-      <p className="py-2 text-center text-xs text-gray-700">
-        © {new Date().getFullYear()} GirlsWhoGive. All rights reserved.
-      </p>
+      <div className="py-2 text-center text-xs text-gray-700">
+        <p className="mb-2">
+          © {new Date().getFullYear()} GirlsWhoGive. All rights reserved.
+        </p>
+        <p>
+          <a href="/privacy-policy" className="hover:text-pink-600 transition-colors underline">
+            Privacy Policy
+          </a>
+        </p>
+      </div>
     </footer>
   );
 };

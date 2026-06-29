@@ -2,6 +2,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Logo from './Logo';
+import { MISSION_STATEMENT } from "@/config/missionStatement";
+import { HeroImageGallery } from './HomeGallerySection';
 
 const HeroSection = ({ onRoleSelection, user, userRole }) => {
   return (
@@ -121,8 +123,7 @@ const HeroSection = ({ onRoleSelection, user, userRole }) => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="text-sm sm:text-sm md:text-base text-black leading-relaxed"
               >
-                Simplified donation tracking for nonprofits and community organizations.
-                Our platform makes it easy for donors to let organizations know exactly what they're bringing—whether it's food, clothing, books, or other in-kind items—before they arrive. Organizations can track commitments, record in-person donations in seconds, and view clear monthly totals without spreadsheets or manual guesswork. Everything stays organized in one place, so nonprofits spend less time managing donations and more time making an impact.
+                {MISSION_STATEMENT}
               </motion.p>
 
               {/* CTA Buttons */}
@@ -162,78 +163,20 @@ const HeroSection = ({ onRoleSelection, user, userRole }) => {
                   onClick={() => onRoleSelection('organization')}
                   className="px-6 sm:px-8 py-3 sm:py-4 bg-white border-2 border-pink-500 text-pink-600 rounded-2xl font-semibold text-base sm:text-lg hover:bg-pink-50 transition-all duration-300"
                 >
-                  Join as Organization
+                  Join as Organization/Chapter
                 </motion.button>
               </motion.div>
             </motion.div>
 
-            {/* Right Side - Community Impact Card */}
+            {/* Right Side - Community Gallery */}
             <motion.div
               initial={{ opacity: 0, x: 50, scale: 0.98 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
               className="relative"
             >
-              {/* Reflective Glass Card */}
-              <div className="reflective-glass relative p-8 sm:p-10">
-                {/* Community Impact Content */}
-                <div className="relative text-center z-10">
-                  <motion.div
-                    animate={{
-                      y: [0, -10, 0],
-                    }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                    className="space-y-6"
-                  >
-                    {/* Numbered Circles */}
-                    <div className="flex justify-center space-x-4">
-                      {[1, 2, 3].map((i) => (
-                        <motion.div
-                          key={i}
-                          className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg"
-                          animate={{
-                            y: [0, -5, 0],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: i * 0.2,
-                            ease: "easeInOut"
-                          }}
-                        >
-                          {i}
-                        </motion.div>
-                      ))}
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-800 mb-2">Community Impact</h3>
-                      <p className="text-lg text-gray-700">Connecting hearts, changing lives</p>
-                    </div>
-                  </motion.div>
-                  
-                  {/* Heart Icon */}
-                  <motion.div
-                    className="absolute top-2 right-2 text-pink-300/40"
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      opacity: [0.4, 0.6, 0.4],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                  </motion.div>
-                </div>
+              <div className="reflective-glass relative p-4 sm:p-6">
+                <HeroImageGallery />
               </div>
             </motion.div>
           </div>

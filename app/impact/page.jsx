@@ -30,3 +30,7 @@ const ImpactPage = () => {
 
 export default ImpactPage;
 
+
+
+
+

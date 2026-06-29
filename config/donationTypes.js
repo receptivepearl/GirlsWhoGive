@@ -13,7 +13,7 @@ export const DONATION_TYPES = {
 export const DONATION_TYPE_CONFIG = {
     [DONATION_TYPES.MENSTRUAL_PRODUCTS]: {
         label: 'Menstrual Products',
-        icon: '🩸',
+        icon: '🧼',
         // Google Maps search keywords (broadened for inclusivity)
         googleMapsKeywords: [
             "women's shelter",

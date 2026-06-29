@@ -1,12 +1,12 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
-import axios from "axios";
 import EnhancedNavbar from "@/components/EnhancedNavbar";
 import Footer from "@/components/Footer";
 import StatsSection from "@/components/StatsSection";
+import { MISSION_STATEMENT } from "@/config/missionStatement";
 
 const About = () => {
   const bioRef = useRef(null);
@@ -14,14 +14,12 @@ const About = () => {
   const missionRef = useRef(null);
   const howItWorksRef = useRef(null);
   const verifiedRef = useRef(null);
-  const ctaRef = useRef(null);
 
   const bioInView = useInView(bioRef, { once: true, margin: "-100px" });
   const heroInView = useInView(heroRef, { once: true, margin: "-100px" });
   const missionInView = useInView(missionRef, { once: true, margin: "-100px" });
   const howItWorksInView = useInView(howItWorksRef, { once: true, margin: "-100px" });
   const verifiedInView = useInView(verifiedRef, { once: true, margin: "-100px" });
-  const ctaInView = useInView(ctaRef, { once: true, margin: "-100px" });
 
 
   return (
@@ -108,17 +106,9 @@ const About = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-lg sm:text-xl md:text-2xl text-gray-600 leading-relaxed"
+                className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed"
               >
-                <span className="font-semibold text-pink-600">GirlsWhoGive</span> is a donation-tracking platform that connects compassionate donors with nonprofits and community organizations in need of essential items.
-              </motion.p>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="text-lg sm:text-xl md:text-2xl text-gray-600 leading-relaxed mt-4"
-              >
-                Our goal is simple: make in-kind giving <span className="font-semibold text-pink-600">organized, intentional, and transparent</span>—for both donors and organizations.
+                {MISSION_STATEMENT}
               </motion.p>
               <motion.div
                 initial={{ width: 0 }}
@@ -215,7 +205,7 @@ const About = () => {
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-purple-600" />
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-6">Our Mission</h2>
               <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
-                We believe that access to basic necessities—such as food, clothing, hygiene products, books, and school supplies—should never be a barrier to dignity, health, or opportunity.
+                {MISSION_STATEMENT}
               </p>
               <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
                 GirlsWhoGive connects donors with nonprofits, shelters, schools, and community organizations by streamlining how in-kind donations are communicated and tracked. Together, we're building a system where generosity is easier to give—and easier to manage.
@@ -302,57 +292,6 @@ const About = () => {
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
-
-
-            {/* Call to Action */}
-            <motion.div
-              ref={ctaRef}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={ctaInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.8 }}
-              className="bg-gradient-to-r from-pink-600 to-purple-600 rounded-3xl p-8 md:p-12 text-center text-white shadow-lg relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-pink-700 to-purple-700 opacity-0 hover:opacity-100 transition-opacity duration-300" />
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={ctaInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 relative z-10"
-              >
-                Ready to Make a Difference?
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={ctaInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-lg sm:text-xl mb-8 opacity-90 relative z-10"
-              >
-                Join a growing community of donors and organizations working together to make in-kind giving more effective.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={ctaInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center relative z-10"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => window.location.href = '/user-dashboard'}
-                  className="bg-white text-pink-600 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors shadow-lg"
-                >
-                  Start Donating
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => window.location.href = '/organization-dashboard'}
-                  className="bg-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg hover:bg-purple-800 transition-colors border border-white/30 shadow-lg"
-                >
-                  Join as Organization
-                </motion.button>
-              </motion.div>
             </motion.div>
           </div>
         </div>

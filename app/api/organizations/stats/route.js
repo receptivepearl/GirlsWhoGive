@@ -3,6 +3,7 @@ import connectDB from "@/config/db";
 import Donation from "@/models/Donation";
 import Organization from "@/models/Organization";
 import { NextResponse } from "next/server";
+import { getChapterIdsForParent } from "@/lib/orgChapters";
 
 export async function GET(request) {
     try {
@@ -17,7 +18,6 @@ export async function GET(request) {
 
         await connectDB();
 
-        // Find the organization by userId
         const organization = await Organization.findById(userId);
         if (!organization) {
             return NextResponse.json({
@@ -26,17 +26,23 @@ export async function GET(request) {
             }, { status: 404 });
         }
 
-        // Calculate real-time stats from donations
+        let organizationIds = [userId];
+
+        if (organization.isOrgAdministrator && organization.approvalStatus === 'approved' && organization.verified) {
+            const chapterIds = await getChapterIdsForParent(userId);
+            organizationIds = chapterIds;
+        }
+
         const totalOrders = await Donation.countDocuments({ 
-            organizationId: userId,
-            status: { $ne: 'cancelled' }
+            organizationId: { $in: organizationIds },
+            status: { $in: ['confirmed', 'in_transit', 'completed'] },
         });
 
         const totalProducts = await Donation.aggregate([
             {
                 $match: {
-                    organizationId: userId,
-                    status: { $ne: 'cancelled' }
+                    organizationId: { $in: organizationIds },
+                    status: { $in: ['confirmed', 'in_transit', 'completed'] },
                 }
             },
             {
@@ -47,23 +53,28 @@ export async function GET(request) {
             }
         ]);
 
-        // Calculate this month's orders
         const thisMonth = new Date();
         thisMonth.setDate(1);
         thisMonth.setHours(0, 0, 0, 0);
 
         const thisMonthOrders = await Donation.countDocuments({
-            organizationId: userId,
+            organizationId: { $in: organizationIds },
             date: { $gte: thisMonth.getTime() },
-            status: { $ne: 'cancelled' }
+            status: { $in: ['confirmed', 'in_transit', 'completed'] },
         });
+
+        const chapterCount = organization.isOrgAdministrator
+            ? organizationIds.length
+            : 0;
 
         return NextResponse.json({
             success: true,
             stats: {
                 totalOrders,
                 totalProducts: totalProducts[0]?.total || 0,
-                thisMonthOrders
+                thisMonthOrders,
+                chapterCount,
+                isOrgAdministrator: organization.isOrgAdministrator,
             }
         });
 
@@ -75,4 +86,3 @@ export async function GET(request) {
         }, { status: 500 });
     }
 }
-

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAppContext } from "@/context/AppContext";
+import { MISSION_STATEMENT } from "@/config/missionStatement";
 
 const DonorAboutPage = () => {
   const router = useRouter();
@@ -43,23 +44,15 @@ const DonorAboutPage = () => {
                 About <span className="text-pink-600">GirlsWhoGive</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 leading-relaxed">
-                We're on a mission to end period poverty by connecting compassionate donors 
-                with organizations that serve women in need.
+                {MISSION_STATEMENT}
               </p>
             </div>
 
             {/* Mission Section */}
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 md:p-12 mb-12 shadow-lg border border-pink-100">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Our Mission</h2>
-              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
-                We believe that access to menstrual products is a fundamental right, not a privilege. 
-                Period poverty affects millions of women and girls worldwide, forcing them to choose 
-                between basic necessities and essential hygiene products.
-              </p>
               <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
-                GirlsWhoGive bridges the gap between generous donors and organizations serving 
-                women's shelters, community health centers, and nonprofits. Together, we're creating 
-                a world where no woman has to face period poverty alone.
+                {MISSION_STATEMENT}
               </p>
             </div>
 
@@ -74,8 +67,8 @@ const DonorAboutPage = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Discover</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Find verified nonprofits and women's shelters in your area that accept 
-                    menstrual product donations.
+                    Find verified nonprofits and community organizations in your area that accept
+                    in-kind donations.
                   </p>
                 </div>
                 
@@ -206,7 +199,7 @@ const DonorAboutPage = () => {
             <div className="bg-gradient-to-r from-pink-600 to-purple-600 rounded-3xl p-8 md:p-12 text-center text-white shadow-lg">
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Make a Difference?</h2>
               <p className="text-xl mb-8 opacity-90">
-                Join our community of compassionate donors and help end period poverty in your area.
+                Join our community of compassionate donors and help organizations in your area receive the in-kind support they need.
               </p>
               <button 
                 onClick={() => router.push('/donor/discover')}

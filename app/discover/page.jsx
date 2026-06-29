@@ -119,12 +119,7 @@ const DiscoverPage = () => {
   };
 
   const handleOrganizationClick = async (organization) => {
-    // If user is not logged in, show message to log in
-    if (!user) {
-      alert('Please log in or create an account to place a donation order or contact organizations.');
-      router.push('/connect?role=donor');
-      return;
-    }
+    if (!user) return;
 
     // If verified and not a Google Place, go to place order
     if (organization.verified && !organization.isGooglePlace) {
@@ -212,13 +207,6 @@ const DiscoverPage = () => {
             <p className="text-lg text-gray-600">
               Find nearby organizations that accept donations
             </p>
-            {!user && (
-              <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-md mx-auto">
-                <p className="text-blue-800 text-sm">
-                  <strong>Note:</strong> Please log in to place donation orders or contact organizations.
-                </p>
-              </div>
-            )}
             {locationError && (
               <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3 max-w-md mx-auto">
                 <p className="text-yellow-800 text-sm">{locationError}</p>
@@ -408,15 +396,16 @@ const DiscoverPage = () => {
                   </div>
                 </div>
 
+                {user && (
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-500">
                     {org.verified && !org.isGooglePlace ? (
-                      <span className={user ? "text-green-600 font-medium" : "text-orange-600 font-medium"}>
-                        {user ? "✓ Click to place a donation order" : "Log in to place a donation order"}
+                      <span className="text-green-600 font-medium">
+                        ✓ Click to place a donation order
                       </span>
                     ) : (
-                      <span className={user ? "text-orange-600 font-medium" : "text-orange-600 font-medium"}>
-                        {user ? "Contact directly or visit in person" : "Log in to contact organization"}
+                      <span className="text-orange-600 font-medium">
+                        Contact directly or visit in person
                       </span>
                     )}
                   </div>
@@ -428,9 +417,10 @@ const DiscoverPage = () => {
                         : 'bg-gray-600 text-white hover:bg-gray-700'
                     }`}
                   >
-                    {org.verified && !org.isGooglePlace ? (user ? 'Place Order' : 'Log In') : (user ? 'Contact' : 'Log In')}
+                    {org.verified && !org.isGooglePlace ? 'Place Order' : 'Contact'}
                   </button>
                 </div>
+                )}
               </div>
               ))
             )}
@@ -444,14 +434,12 @@ const DiscoverPage = () => {
                 <h4 className="font-semibold text-gray-900 mb-2">Verified Organizations</h4>
                 <p className="text-gray-600 text-sm">
                   Organizations with a ✓ checkmark are verified and accept direct donation orders through our platform.
-                  {!user && " Please log in to place orders."}
                 </p>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">Unverified Organizations</h4>
                 <p className="text-gray-600 text-sm">
                   These organizations haven't completed verification yet. You can still contact them directly or visit in person.
-                  {!user && " Please log in to contact organizations."}
                 </p>
               </div>
             </div>
@@ -464,4 +452,8 @@ const DiscoverPage = () => {
 };
 
 export default DiscoverPage;
+
+
+
+
 

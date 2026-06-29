@@ -18,12 +18,13 @@ export const AppContextProvider = (props) => {
 
     const [userData, setUserData] = useState(null)
     const [userRole, setUserRole] = useState(null)
+    const [organizationProfile, setOrganizationProfile] = useState(null)
     const [organizations, setOrganizations] = useState([])
     const [donations, setDonations] = useState([])
     const [loading, setLoading] = useState(false)
 
     const fetchUserData = async () => {
-        if (!user) return;
+        if (!user) return null;
         
         try {
             const token = await getToken()
@@ -34,52 +35,29 @@ export const AppContextProvider = (props) => {
             if (data.success) {
                 setUserData(data.user)
                 setUserRole(data.user.role || 'donor')
-            } else {
-                // If user doesn't exist in database, create them
-                const selectedRole = localStorage.getItem('selectedRole') || 'donor';
-                
-                await createUser(selectedRole);
-                
-                const orgData = localStorage.getItem('organizationData');
-
-                // If organization role, create organization profile
-                if (selectedRole === 'organization' && orgData) {
-                    
-                    const organizationData = JSON.parse(orgData);
-                                                                
-                    if (Object.keys(organizationData).length > 0) { 
-                        
-                        console.log("APPCONTEXT: Attempting POST /api/organizations/create with data:", organizationData); // <-- New Debug Log
-                        
-                        try {
-                            // Run the creation API call
-                            await createOrganization(organizationData); 
-                            toast.success('Organization profile saved!');
-
-                        } catch (e) {
-                            console.error('Failed to create organization profile:', e);
-                            toast.error('Failed to save organization details.');
-                        }
-                    } else {
-                        console.error('APPCONTEXT: organizationData in localStorage was empty {}.');
-                    }
-                    localStorage.removeItem('organizationData');   
-                }
+                setOrganizationProfile(data.organization || null)
+                return data
             }
+
+            setUserData(null)
+            setUserRole(null)
+            setOrganizationProfile(null)
+            return null
         } catch (error) {
-            const selectedRole = localStorage.getItem('selectedRole') || 'donor';
-            await createUser(selectedRole);
-            localStorage.removeItem('selectedRole');
-            localStorage.removeItem('organizationData'); 
+            console.error('Error fetching user data:', error)
+            setUserData(null)
+            setUserRole(null)
+            setOrganizationProfile(null)
+            return null
         }
     }
 
     const createUser = async (role = 'donor') => {
-        if (!user) return;
+        if (!user) return null;
         
         try {
             const token = await getToken()
-            const userData = {
+            const payload = {
                 clerkId: user.id,
                 email: user.emailAddresses[0].emailAddress,
                 firstName: user.firstName,
@@ -87,21 +65,21 @@ export const AppContextProvider = (props) => {
                 role: role
             }
 
-            const { data } = await axios.post('/api/user/create', userData, {
+            const { data } = await axios.post('/api/user/create', payload, {
                 headers: { Authorization: `Bearer ${token}` }
             })
 
             if (data.success) {
                 setUserData(data.user)
-                setUserRole(role)
+                setUserRole(data.user.role || role)
+                return data.user
             }
         } catch (error) {
             console.error('Error creating user:', error)
             toast.error('Error setting up your account')
+            throw error
         }
     }
-
-    // Removed fetchOrganizations - using dummy data for now
 
     const fetchDonations = async () => {
         if (!user || userRole !== 'donor') return;
@@ -123,13 +101,11 @@ export const AppContextProvider = (props) => {
         try {
             const token = await getToken()
             
-            // Check if donationData is FormData (has image) or plain object
             const isFormData = donationData instanceof FormData;
             
             const config = {
                 headers: { 
                     Authorization: `Bearer ${token}`,
-                    // Don't set Content-Type for FormData - browser will set it with boundary
                     ...(isFormData ? {} : { 'Content-Type': 'application/json' })
                 }
             }
@@ -137,7 +113,7 @@ export const AppContextProvider = (props) => {
             const { data } = await axios.post('/api/donations/create', donationData, config)
             if (data.success) {
                 toast.success('Donation commitment created successfully!')
-                fetchDonations() // Refresh donations list
+                fetchDonations()
                 return data.donation
             }
         } catch (error) {
@@ -155,14 +131,13 @@ export const AppContextProvider = (props) => {
                 headers: { Authorization: `Bearer ${token}` }
             })
             if (data.success) {
-                // Update user role to organization
                 setUserRole('organization')
-                toast.success('Organization created successfully!')
-                return data.organization
+                setOrganizationProfile(data.organization)
+                return { ...data.organization, pendingApproval: data.pendingApproval }
             }
         } catch (error) {
             console.error('Error creating organization:', error)
-            toast.error('Error creating organization')
+            toast.error(error.response?.data?.message || 'Error creating organization')
             throw error
         }
     }
@@ -175,7 +150,7 @@ export const AppContextProvider = (props) => {
             })
             if (data.success) {
                 toast.success('Donation commitment cancelled successfully')
-                fetchDonations() // Refresh donations list
+                fetchDonations()
                 return data.donation
             }
         } catch (error) {
@@ -191,6 +166,7 @@ export const AppContextProvider = (props) => {
         } else {
             setUserData(null)
             setUserRole(null)
+            setOrganizationProfile(null)
             setDonations([])
             setOrganizations([])
         }
@@ -205,7 +181,7 @@ export const AppContextProvider = (props) => {
     const value = {
         user, getToken,
         router,
-        userData, userRole,
+        userData, userRole, organizationProfile,
         organizations, donations,
         loading, setLoading,
         fetchUserData, createUser,

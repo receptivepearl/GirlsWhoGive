@@ -9,8 +9,8 @@ const nextConfig = {
             },
             {
                 protocol: 'https',
-                hostname: 'raw.githubusercontent.com',
-                pathname: '**',
+                hostname: 'api.qrserver.com',
+                pathname: '/**',
             },
         ],
     },

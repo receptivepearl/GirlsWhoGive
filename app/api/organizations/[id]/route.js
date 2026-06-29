@@ -6,7 +6,7 @@ export async function GET(request, { params }) {
     try {
         await connectDB();
         
-        const { id } = params;
+        const { id } = await params;
         const organization = await Organization.findById(id);
         
         if (!organization) {

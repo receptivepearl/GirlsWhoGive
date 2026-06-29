@@ -10,6 +10,7 @@ import { useAppContext } from "@/context/AppContext";
 import { locationService } from "@/lib/locationService";
 import axios from "axios";
 import { DONATION_TYPES, DONATION_TYPE_CONFIG } from "@/config/donationTypes";
+import { formatDriveDate } from "@/lib/driveUtils";
 
 
 const DiscoverPage = () => {
@@ -26,6 +27,8 @@ const DiscoverPage = () => {
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(false);
   const [loadingOrgDetails, setLoadingOrgDetails] = useState(false);
+  const [activeDrives, setActiveDrives] = useState([]);
+  const [loadingDrives, setLoadingDrives] = useState(true);
 
   // Redirect if not authenticated or not a donor
   useEffect(() => {
@@ -38,6 +41,26 @@ const DiscoverPage = () => {
       return;
     }
   }, [user, userRole, router]);
+
+  useEffect(() => {
+    const fetchActiveDrives = async () => {
+      try {
+        const response = await fetch('/api/drives?filter=active');
+        const data = await response.json();
+        if (data.success) {
+          setActiveDrives(data.drives || []);
+        }
+      } catch (error) {
+        console.error('Error loading active drives:', error);
+      } finally {
+        setLoadingDrives(false);
+      }
+    };
+
+    if (user && userRole === 'donor') {
+      fetchActiveDrives();
+    }
+  }, [user, userRole]);
 
   // Get user's current location
   useEffect(() => {
@@ -226,7 +249,7 @@ const DiscoverPage = () => {
               Discover Organizations
             </h1>
             <p className="text-lg text-gray-600">
-              Find nearby organizations that accept menstrual product donations
+              Find nearby organizations that accept in-kind donations
             </p>
             {locationError && (
               <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3 max-w-md mx-auto">
@@ -234,6 +257,53 @@ const DiscoverPage = () => {
               </div>
             )}
           </div>
+
+          {/* Active Donation Drives */}
+          {!loadingDrives && activeDrives.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Active Donation Drives</h2>
+              <p className="text-gray-600 text-center mb-6">Contribute to an organization&apos;s ongoing drive event</p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {activeDrives.map((drive) => {
+                  const progress = drive.goalAmount > 0
+                    ? Math.min(100, Math.round((drive.currentAmount / drive.goalAmount) * 100))
+                    : 0;
+                  return (
+                    <div
+                      key={drive._id}
+                      className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-100 hover:shadow-xl transition-all"
+                    >
+                      <span className="inline-block mb-2 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                        {drive.organizationName}
+                      </span>
+                      <h3 className="text-xl font-bold text-gray-900 mb-1">{drive.name}</h3>
+                      <p className="text-sm text-gray-500 mb-3">
+                        {formatDriveDate(drive.startDate)} — {formatDriveDate(drive.endDate)}
+                      </p>
+                      <div className="mb-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>{drive.currentAmount} / {drive.goalAmount} items</span>
+                          <span>{progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-pink-600 h-2 rounded-full" style={{ width: `${progress}%` }} />
+                        </div>
+                      </div>
+                      {drive.comments && (
+                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{drive.comments}</p>
+                      )}
+                      <button
+                        onClick={() => router.push(`/donor/place-order?orgId=${drive.organizationId}&driveId=${drive._id}`)}
+                        className="w-full bg-purple-600 text-white py-2 rounded-xl font-semibold hover:bg-purple-700 transition-colors"
+                      >
+                        Contribute to Drive
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Search and Filters */}
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-pink-100 mb-8">

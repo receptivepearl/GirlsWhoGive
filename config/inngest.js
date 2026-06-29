@@ -140,16 +140,6 @@ export const processDonation = inngest.createFunction(
     await connectDB()
     console.log("Processing donations:", donations.length);
     
-    // Update organization statistics
-    for (const donation of donations) {
-      await Organization.findByIdAndUpdate(donation.organizationId, {
-        $inc: { 
-          totalOrders: 1, 
-          totalProducts: donation.totalItems 
-        }
-      });
-    }
-    
     return {success: true, processed: donations.length};
   }
 )

@@ -24,7 +24,7 @@ export async function POST(request) {
 
         // Check if request is FormData (has image) or JSON
         const contentType = request.headers.get('content-type') || '';
-        let organizationId, organizationName, items, totalItems, donorName, donorEmail;
+        let organizationId, organizationName, items, totalItems, donorName, donorEmail, driveId;
         let imageData = null;
 
         // Try to parse as FormData first (if it contains multipart/form-data)
@@ -38,6 +38,7 @@ export async function POST(request) {
             totalItems = parseInt(formData.get('totalItems')) || 0;
             donorName = formData.get('donorName');
             donorEmail = formData.get('donorEmail');
+            driveId = formData.get('driveId') || null;
             
             const imageFile = formData.get('image');
             
@@ -103,6 +104,7 @@ export async function POST(request) {
             totalItems = body.totalItems;
             donorName = body.donorName;
             donorEmail = body.donorEmail;
+            driveId = body.driveId || null;
         }
 
         if (!organizationId || !items || items.length === 0) {
@@ -110,6 +112,18 @@ export async function POST(request) {
         }
 
         await connectDB();
+
+        if (driveId) {
+            const Drive = (await import('@/models/Drive')).default;
+            const drive = await Drive.findById(driveId);
+            if (!drive || drive.organizationId !== organizationId) {
+                return NextResponse.json({ success: false, message: 'Invalid drive' }, { status: 400 });
+            }
+            const now = Date.now();
+            if (now < drive.startDate || now > drive.endDate) {
+                return NextResponse.json({ success: false, message: 'This drive is not currently active' }, { status: 400 });
+            }
+        }
 
         // INVARIANT: Images are uploaded ONLY at donation creation time
         // If image upload fails, donation is NOT created (error returned above)
@@ -123,6 +137,7 @@ export async function POST(request) {
             donorName: donorName,
             donorEmail: donorEmail,
             organizationName: organizationName,
+            driveId: driveId || null,
             status: 'pending',
             date: Date.now(),
             image: imageData // Cloudinary metadata only (null if no image provided)
@@ -130,13 +145,7 @@ export async function POST(request) {
 
         await donation.save();
 
-        // Update organization statistics
-        await Organization.findByIdAndUpdate(organizationId, {
-            $inc: { 
-                totalOrders: 1, 
-                totalProducts: totalItems 
-            }
-        });
+        // Stats and drive progress update on org confirm/reject, not at submission time.
 
         // Send Inngest event for donation processing
         await inngest.send({

@@ -16,6 +16,7 @@ const AdminDashboard = () => {
     totalDonations: 0,
     totalProductsDonated: 0
   });
+  const [pendingOrgAdminRequests, setPendingOrgAdminRequests] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,14 +39,23 @@ const AdminDashboard = () => {
     const fetchAnalytics = async () => {
       try {
         const token = await getToken();
-        const response = await axios.get('/api/admin/analytics', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const [analyticsRes, requestsRes] = await Promise.all([
+          axios.get('/api/admin/analytics', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('/api/admin/org-admin-requests', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+        ]);
         
-        if (response.data.success) {
-          setAnalytics(response.data.analytics);
+        if (analyticsRes.data.success) {
+          setAnalytics(analyticsRes.data.analytics);
         } else {
-          toast.error(response.data.message);
+          toast.error(analyticsRes.data.message);
+        }
+
+        if (requestsRes.data.success) {
+          setPendingOrgAdminRequests(requestsRes.data.pendingCount || 0);
         }
       } catch (error) {
         console.error("Error fetching analytics:", error);
@@ -172,6 +182,25 @@ const AdminDashboard = () => {
             <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-pink-100">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
               <div className="space-y-4">
+                {pendingOrgAdminRequests > 0 && (
+                  <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg mb-4">
+                    <p className="text-purple-900 font-medium mb-2">
+                      {pendingOrgAdminRequests} organization administrator request{pendingOrgAdminRequests !== 1 ? 's' : ''} awaiting review
+                    </p>
+                    <button
+                      onClick={() => router.push('/admin/org-admin-requests')}
+                      className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-200 shadow-md"
+                    >
+                      Review Org Admin Requests
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={() => router.push('/admin/org-admin-requests')}
+                  className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-purple-700 transition-colors duration-200 shadow-md"
+                >
+                  Organization Administrator Requests
+                </button>
                 <button
                   onClick={() => router.push('/admin/organizations')}
                   className="w-full bg-pink-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-pink-700 transition-colors duration-200 shadow-md"
