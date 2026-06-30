@@ -4,8 +4,8 @@ import connectDB from '@/config/db';
 import Drive from '@/models/Drive';
 import Organization from '@/models/Organization';
 import User from '@/models/User';
-import { getDriveStatus } from '@/lib/driveUtils';
-import { getChapterIdsForParent } from '@/lib/orgChapters';
+import { getDriveStatus, parseLocalDateStart, parseLocalDateEnd } from '@/lib/driveUtils';
+import { getOrganizationIdsForUser } from '@/lib/orgChapters';
 import { buildDriveDonationUrl } from '@/lib/driveQrCode';
 
 function resolveAppBaseUrl(request) {
@@ -23,18 +23,6 @@ function enrichDrive(drive, baseUrl, now = Date.now()) {
         baseUrl
     );
     return obj;
-}
-
-async function getOrganizationIdsForUser(userId) {
-    const organization = await Organization.findById(userId);
-    if (!organization) return [];
-
-    if (organization.isOrgAdministrator && organization.approvalStatus === 'approved' && organization.verified) {
-        const chapterIds = await getChapterIdsForParent(userId);
-        return [userId, ...chapterIds];
-    }
-
-    return [userId];
 }
 
 export async function GET(request) {
@@ -135,8 +123,8 @@ export async function POST(request) {
             }, { status: 400 });
         }
 
-        const start = new Date(startDate).getTime();
-        const end = new Date(endDate).getTime();
+        const start = parseLocalDateStart(startDate);
+        const end = parseLocalDateEnd(endDate);
 
         if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
             return NextResponse.json({
@@ -157,10 +145,10 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: 'Organization not found' }, { status: 404 });
         }
 
-        if (organization.isOrgAdministrator && (organization.approvalStatus !== 'approved' || !organization.verified)) {
+        if (organization.isOrgAdministrator) {
             return NextResponse.json({
                 success: false,
-                message: 'Organization administrator account must be approved before creating drives',
+                message: 'Organization administrators cannot create drives. Only affiliated chapters can start drives.',
             }, { status: 403 });
         }
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { DONATION_TYPES, DONATION_TYPE_CONFIG } from '@/config/donationTypes';
-import { formatDriveDate } from '@/lib/driveUtils';
+import { formatDriveDate, parseLocalDateStart, parseLocalDateEnd } from '@/lib/driveUtils';
 import { buildDriveDonationUrl, buildDriveQrCodeImageUrl } from '@/lib/driveQrCode';
 
 function useAbsoluteDriveQrCode(drive, { size = '200x200' } = {}) {
@@ -188,6 +188,16 @@ export function CreateDriveForm({ getToken, onSuccess, onCancel }) {
     }));
   };
 
+  const handleStartDateChange = (value) => {
+    setForm((prev) => {
+      const next = { ...prev, startDate: value };
+      if (value && prev.endDate && prev.endDate < value) {
+        next.endDate = value;
+      }
+      return next;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.goalAmount || !form.startDate || !form.endDate) {
@@ -199,6 +209,13 @@ export function CreateDriveForm({ getToken, onSuccess, onCancel }) {
       return;
     }
 
+    const start = parseLocalDateStart(form.startDate);
+    const end = parseLocalDateEnd(form.endDate);
+    if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
+      toast.error('End date must be on or after start date');
+      return;
+    }
+
     setSaving(true);
     try {
       const token = await getToken();
@@ -206,7 +223,12 @@ export function CreateDriveForm({ getToken, onSuccess, onCancel }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (data.success) {
-        toast.success('Drive event created! QR code is ready.');
+        const isUpcoming = data.drive?.status === 'upcoming';
+        toast.success(
+          isUpcoming
+            ? `Drive scheduled! It goes live on ${formatDriveDate(data.drive.startDate)}.`
+            : 'Drive event created! QR code is ready.'
+        );
         setForm(emptyForm);
         onSuccess?.(data.drive);
       } else {
@@ -282,15 +304,17 @@ export function CreateDriveForm({ getToken, onSuccess, onCancel }) {
           <input
             type="date"
             value={form.startDate}
-            onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+            onChange={(e) => handleStartDateChange(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white"
           />
+          <p className="mt-1 text-sm text-gray-500">You can schedule a drive to start on a future date</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
           <input
             type="date"
             value={form.endDate}
+            min={form.startDate || undefined}
             onChange={(e) => setForm({ ...form, endDate: e.target.value })}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white"
           />
@@ -319,7 +343,14 @@ export function CreateDriveForm({ getToken, onSuccess, onCancel }) {
   );
 }
 
-export function DashboardDriveSection({ getToken, onRefresh, onViewAllDrives, pastDriveCount }) {
+export function DashboardDriveSection({
+  getToken,
+  onRefresh,
+  onViewAllDrives,
+  pastDriveCount,
+  upcomingDrives = [],
+  canCreateDrives = true,
+}) {
   const [showForm, setShowForm] = useState(false);
   const [newDriveForQr, setNewDriveForQr] = useState(null);
 
@@ -330,29 +361,45 @@ export function DashboardDriveSection({ getToken, onRefresh, onViewAllDrives, pa
         <div>
           <h3 className="text-lg font-bold text-gray-900">Donation Drives</h3>
           <p className="text-sm text-gray-600">
-            {pastDriveCount > 0
-              ? `${pastDriveCount} past drive${pastDriveCount !== 1 ? 's' : ''} on record`
-              : 'Create a drive for donors to contribute to'}
+            {canCreateDrives
+              ? pastDriveCount > 0
+                ? `${pastDriveCount} past drive${pastDriveCount !== 1 ? 's' : ''} on record`
+                : 'Create a drive for donors to contribute to'
+              : 'View drive progress across your affiliated chapters'}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="px-5 py-2.5 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors text-sm"
-          >
-            {showForm ? 'Cancel' : '+ Create New Drive'}
-          </button>
-          {pastDriveCount > 0 && (
+          {canCreateDrives && (
             <button
+              type="button"
+              onClick={() => setShowForm(!showForm)}
+              className="px-5 py-2.5 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors text-sm"
+            >
+              {showForm ? 'Cancel' : '+ Create New Drive'}
+            </button>
+          )}
+          {(pastDriveCount > 0 || !canCreateDrives) && onViewAllDrives && (
+            <button
+              type="button"
               onClick={onViewAllDrives}
               className="px-5 py-2.5 border-2 border-purple-300 text-purple-700 rounded-xl font-semibold hover:bg-purple-50 transition-colors text-sm"
             >
-              View Past Drives
+              {canCreateDrives ? 'View Past Drives' : 'View All Drives'}
             </button>
           )}
         </div>
       </div>
-      {showForm && (
+
+      {upcomingDrives.length > 0 && (
+        <div className="mt-6 space-y-3">
+          <h4 className="text-sm font-semibold text-gray-700">Scheduled drives</h4>
+          {upcomingDrives.map((drive) => (
+            <UpcomingDriveCard key={drive._id} drive={drive} />
+          ))}
+        </div>
+      )}
+
+      {showForm && canCreateDrives && (
         <div className="mt-6">
           <CreateDriveForm
             getToken={getToken}
@@ -370,6 +417,50 @@ export function DashboardDriveSection({ getToken, onRefresh, onViewAllDrives, pa
       {newDriveForQr && (
         <DriveQrCodeModal drive={newDriveForQr} onClose={() => setNewDriveForQr(null)} />
       )}
+    </>
+  );
+}
+
+function UpcomingDriveCard({ drive, showOrgLabel, onClick }) {
+  const [showQr, setShowQr] = useState(false);
+
+  return (
+    <>
+      <div className="w-full border border-blue-200 rounded-2xl p-5 bg-blue-50/50 hover:border-blue-400 hover:shadow-md transition-all flex gap-4">
+        <button
+          type="button"
+          onClick={onClick}
+          className="flex-1 text-left min-w-0"
+          disabled={!onClick}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              {showOrgLabel && drive.organizationName && (
+                <span className="inline-block mb-2 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                  {drive.organizationName}
+                </span>
+              )}
+              <h4 className="text-lg font-bold text-gray-900">{drive.name}</h4>
+              <p className="text-sm text-gray-500 mt-1">
+                {formatDriveDate(drive.startDate)} — {formatDriveDate(drive.endDate)}
+              </p>
+              <p className="text-xs text-blue-700 font-medium mt-2">
+                Goes live on {formatDriveDate(drive.startDate)}
+              </p>
+            </div>
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              Scheduled
+            </span>
+          </div>
+          {onClick && (
+            <p className="text-xs text-blue-700 font-medium mt-3">Click to view details →</p>
+          )}
+        </button>
+
+        <DriveQrCodeThumb drive={drive} onClick={() => setShowQr(true)} />
+      </div>
+
+      {showQr && <DriveQrCodeModal drive={drive} onClose={() => setShowQr(false)} />}
     </>
   );
 }
@@ -651,7 +742,7 @@ export function OngoingDrivesPanel({ drives, showOrgLabel, getToken }) {
   );
 }
 
-export function OngoingDrivesSummary({ drives, showOrgLabel, getToken, onViewAll }) {
+export function OngoingDrivesSummary({ drives, showOrgLabel, getToken, onViewAll, isOrgAdminViewer = false }) {
   const [selectedDriveId, setSelectedDriveId] = useState(null);
   const preview = drives.slice(0, 3);
 
@@ -661,7 +752,11 @@ export function OngoingDrivesSummary({ drives, showOrgLabel, getToken, onViewAll
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-2xl font-bold text-gray-900">Ongoing Drives</h3>
-            <p className="text-gray-600 text-sm">{drives.length} active drive{drives.length !== 1 ? 's' : ''}</p>
+            <p className="text-gray-600 text-sm">
+              {isOrgAdminViewer
+                ? `${drives.length} active drive${drives.length !== 1 ? 's' : ''} across your chapters`
+                : `${drives.length} active drive${drives.length !== 1 ? 's' : ''}`}
+            </p>
           </div>
           {drives.length > 0 && onViewAll && (
             <button
@@ -673,7 +768,11 @@ export function OngoingDrivesSummary({ drives, showOrgLabel, getToken, onViewAll
           )}
         </div>
         {preview.length === 0 ? (
-          <p className="text-gray-500 text-center py-6">No ongoing drives. Create one below to get started.</p>
+          <p className="text-gray-500 text-center py-6">
+            {isOrgAdminViewer
+              ? 'No ongoing drives across your chapters right now.'
+              : 'No ongoing drives. Create one below to get started.'}
+          </p>
         ) : (
           <div className="space-y-4">
             {preview.map((drive) => (
@@ -702,12 +801,30 @@ export function OngoingDrivesSummary({ drives, showOrgLabel, getToken, onViewAll
 
 export function AllDrivesPanel({ drives, showOrgLabel, getToken }) {
   const [selectedDriveId, setSelectedDriveId] = useState(null);
+  const upcomingDrives = drives.filter((d) => d.status === 'upcoming');
   const ongoingDrives = drives.filter((d) => d.status === 'ongoing');
   const pastDrives = drives.filter((d) => d.status === 'completed');
 
   return (
     <>
       <div className="space-y-8">
+        {upcomingDrives.length > 0 && (
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-pink-100">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Scheduled Drives</h3>
+            <p className="text-gray-600 mb-6">Upcoming drives that haven&apos;t started yet</p>
+            <div className="space-y-4">
+              {upcomingDrives.map((drive) => (
+                <UpcomingDriveCard
+                  key={drive._id}
+                  drive={drive}
+                  showOrgLabel={showOrgLabel}
+                  onClick={() => setSelectedDriveId(drive._id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-pink-100">
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Ongoing Drives</h3>
           <p className="text-gray-600 mb-6">Active drives that haven&apos;t reached their end date</p>

@@ -14,7 +14,7 @@ import { MISSION_STATEMENT } from "@/config/missionStatement";
 
 const OrganizationDashboard = () => {
   const router = useRouter();
-  const { user, userRole, getToken } = useAppContext();
+  const { user, userRole, getToken, organizationProfile } = useAppContext();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [organizationData, setOrganizationData] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -36,6 +36,9 @@ const OrganizationDashboard = () => {
   const [isRejected, setIsRejected] = useState(false);
   const [showEditDetails, setShowEditDetails] = useState(false);
 
+  const activeOrganization = organizationData || organizationProfile;
+  const organizationDisplayName = activeOrganization?.name?.trim() || '';
+
   // Redirect if not authenticated or not an organization
   useEffect(() => {
     // Wait a bit for userRole to load before redirecting
@@ -52,8 +55,12 @@ const OrganizationDashboard = () => {
   }, [user, userRole, router]);
 
   const loadData = async () => {
+    if (!user) return;
+
     try {
       const token = await getToken();
+      if (!token) return;
+
       const headers = { Authorization: `Bearer ${token}` };
       
       const [orgRes, pendingRes, statsRes] = await Promise.all([
@@ -81,6 +88,14 @@ const OrganizationDashboard = () => {
             console.error('Error loading chapters:', chapterError);
           }
         }
+      } else if (organizationProfile) {
+        const org = organizationProfile;
+        setOrganizationData(org);
+        const pending = org.isOrgAdministrator && (org.approvalStatus === 'pending' || !org.verified);
+        const rejected = org.isOrgAdministrator && org.approvalStatus === 'rejected';
+        setIsPendingApproval(pending);
+        setIsRejected(rejected);
+        setIsOrgAdmin(org.isOrgAdministrator && org.approvalStatus === 'approved' && org.verified);
       }
       if (pendingRes.data?.success) {
         const mappedPending = pendingRes.data.donations.map(d => ({
@@ -127,13 +142,15 @@ const OrganizationDashboard = () => {
   };
 
   useEffect(() => {
+    if (!user) return;
+
     loadData();
-    
+
     // Refresh data every 30 seconds for real-time updates
     const interval = setInterval(loadData, 30000);
-    
+
     return () => clearInterval(interval);
-  }, []);
+  }, [user, organizationProfile?._id]);
 
   const handleSubmissionAction = async (orderId, action) => {
     try {
@@ -323,6 +340,7 @@ const OrganizationDashboard = () => {
       <OngoingDrivesSummary
         drives={ongoingDriveEvents}
         showOrgLabel={isOrgAdmin}
+        isOrgAdminViewer={isOrgAdmin}
         getToken={getToken}
         onViewAll={() => setActiveTab('ongoing-drives')}
       />
@@ -332,6 +350,8 @@ const OrganizationDashboard = () => {
         onRefresh={loadData}
         onViewAllDrives={() => setActiveTab('all-drives')}
         pastDriveCount={driveEvents.filter((d) => d.status === 'completed').length}
+        upcomingDrives={driveEvents.filter((d) => d.status === 'upcoming')}
+        canCreateDrives={!isOrgAdmin}
       />
 
       {isOrgAdmin && chapters.length > 0 && (
@@ -612,9 +632,9 @@ const OrganizationDashboard = () => {
               </h1>
               <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
                 <p className="text-lg text-gray-600">
-                  Welcome, <span className="font-semibold text-gray-900">{organizationData?.name || 'Loading...'}</span>
+                  Welcome, <span className="font-semibold text-gray-900">{organizationDisplayName || 'your chapter'}</span>
                 </p>
-                {organizationData && (
+                {activeOrganization && (
                   <button
                     type="button"
                     onClick={() => setShowEditDetails(true)}
@@ -642,6 +662,8 @@ const OrganizationDashboard = () => {
                   ? '❌ Not Approved'
                   : isOrgAdmin
                   ? '✓ Organization Administrator'
+                  : activeOrganization?.parentOrganizationId
+                  ? '✓ Chapter'
                   : '✓ Verified Organization'}
               </div>
           </div>
@@ -725,7 +747,7 @@ const OrganizationDashboard = () => {
       <OrganizationEditDetailsModal
         isOpen={showEditDetails}
         onClose={() => setShowEditDetails(false)}
-        organization={organizationData}
+        organization={activeOrganization}
         getToken={getToken}
         onSaved={(updatedOrg) => {
           setOrganizationData(updatedOrg);
