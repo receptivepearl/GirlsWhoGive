@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { DONATION_TYPES, DONATION_TYPE_CONFIG } from '@/config/donationTypes';
@@ -88,7 +89,20 @@ function DriveQrCodeThumb({ drive, onClick }) {
 
 export function DriveQrCodeModal({ drive, onClose }) {
   const [downloading, setDownloading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { donationUrl, qrImageUrl, ready } = useAbsoluteDriveQrCode(drive, { size: '400x400' });
+
+  useEffect(() => {
+    setMounted(true);
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -102,68 +116,84 @@ export function DriveQrCodeModal({ drive, onClose }) {
     }
   };
 
-  if (!ready) {
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={onClose}>
-        <div className="bg-white rounded-3xl p-8 shadow-xl" onClick={(e) => e.stopPropagation()}>
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mx-auto" />
-        </div>
-      </div>
-    );
-  }
+  if (!mounted) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-3xl max-w-md w-full p-8 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Drive QR Code</h2>
-            <p className="text-sm text-gray-600 mt-1">{drive.name}</p>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-        </div>
+  const modal = (
+    <div
+      className="fixed inset-0 z-[10000] isolate"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="drive-qr-modal-title"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 h-full w-full cursor-default border-0 bg-black/75 backdrop-blur-sm p-0"
+        onClick={onClose}
+        aria-label="Close QR code"
+      />
 
-        <p className="text-sm text-gray-600 mb-4">
-          Donors can scan this code to contribute directly to this drive.
-        </p>
+      <div className="pointer-events-none relative z-10 flex min-h-full items-center justify-center p-4">
+        <div
+          className="pointer-events-auto w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {!ready ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600" />
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h2 id="drive-qr-modal-title" className="text-xl font-bold text-gray-900">Drive QR Code</h2>
+                  <p className="text-sm text-gray-600 mt-1">{drive.name}</p>
+                </div>
+                <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+              </div>
 
-        <div className="flex justify-center mb-4">
-          <img
-            src={qrImageUrl}
-            alt={`QR code for ${drive.name}`}
-            width={400}
-            height={400}
-            className="rounded-xl border border-gray-200"
-          />
-        </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Donors can scan this code to contribute directly to this drive.
+              </p>
 
-        {donationUrl && (
-          <p className="text-xs text-gray-500 break-all bg-gray-50 rounded-lg p-3 mb-4">{donationUrl}</p>
-        )}
+              <div className="flex justify-center mb-4">
+                <img
+                  src={qrImageUrl}
+                  alt={`QR code for ${drive.name}`}
+                  width={400}
+                  height={400}
+                  className="rounded-xl border border-gray-200"
+                />
+              </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            type="button"
-            onClick={handleDownload}
-            disabled={downloading}
-            className="flex-1 px-5 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50"
-          >
-            {downloading ? 'Downloading...' : 'Download PNG'}
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-5 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50"
-          >
-            Close
-          </button>
+              {donationUrl && (
+                <p className="text-xs text-gray-500 break-all bg-gray-50 rounded-lg p-3 mb-4">{donationUrl}</p>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="flex-1 px-5 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {downloading ? 'Downloading...' : 'Download PNG'}
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-5 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 const emptyForm = {
