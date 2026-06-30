@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 const ConnectContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, userRole, organizationProfile, createUser, createOrganization, fetchUserData } = useAppContext();
+  const { user, userRole, organizationProfile, userDataLoaded, createUser, createOrganization, fetchUserData } = useAppContext();
   const { openSignUp } = useClerk();
 
   const [selectedRole, setSelectedRole] = useState(searchParams.get('role') || null);
@@ -39,18 +39,30 @@ const ConnectContent = () => {
   const isCompleteStep = searchParams.get('step') === 'complete';
 
   useEffect(() => {
+    if (!user || !userDataLoaded) return;
+
     const storedRole = localStorage.getItem('selectedRole');
-    if (user && storedRole) {
+
+    if (storedRole) {
       setSelectedRole(storedRole);
       setSignupPhase('complete-profile');
-    } else if (user && userRole === 'organization' && !organizationProfile) {
-      localStorage.setItem('selectedRole', 'organization');
+      return;
+    }
+
+    if (userRole === 'organization') {
+      if (organizationProfile) {
+        router.replace('/organization-dashboard');
+        return;
+      }
       setSelectedRole('organization');
       setSignupPhase('complete-profile');
-    } else if (isCompleteStep && user && userRole && !storedRole) {
+      return;
+    }
+
+    if (isCompleteStep && userRole) {
       setSignupPhase('choose-role');
     }
-  }, [user, userRole, organizationProfile, isCompleteStep]);
+  }, [user, userRole, organizationProfile, userDataLoaded, isCompleteStep, router]);
 
   useEffect(() => {
     if (signupPhase !== 'complete-profile' || selectedRole !== 'organization' || isOrgAdministrator) return;
@@ -74,7 +86,7 @@ const ConnectContent = () => {
   }, [signupPhase, selectedRole, isOrgAdministrator]);
 
   useEffect(() => {
-    if (!user || !userRole) return;
+    if (!user || !userDataLoaded || !userRole) return;
     const storedRole = localStorage.getItem('selectedRole');
     if (storedRole) return;
 
@@ -87,7 +99,7 @@ const ConnectContent = () => {
     } else if (userRole === 'admin') {
       router.push('/admin/dashboard');
     }
-  }, [user, userRole, organizationProfile, router]);
+  }, [user, userRole, organizationProfile, userDataLoaded, router]);
 
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
@@ -261,7 +273,14 @@ const ConnectContent = () => {
             </p>
           </div>
 
-          {signupPhase === 'choose-role' && (
+          {user && !userDataLoaded && (
+            <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-12 text-center shadow-lg border border-pink-100">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4" />
+              <p className="text-gray-600">Loading your account...</p>
+            </div>
+          )}
+
+          {userDataLoaded && signupPhase === 'choose-role' && (
             <>
               <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-lg border border-pink-100 mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Role</h2>
@@ -385,7 +404,7 @@ const ConnectContent = () => {
             </>
           )}
 
-          {signupPhase === 'complete-profile' && user && selectedRole && (
+          {userDataLoaded && signupPhase === 'complete-profile' && user && selectedRole && (
             <>
               <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-pink-100 mb-8">
                 <p className="text-gray-700">

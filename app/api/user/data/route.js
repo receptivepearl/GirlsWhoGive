@@ -4,6 +4,7 @@ import Organization from "@/models/Organization";
 import connectDB from "@/config/db";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { serializeOrganization } from "@/lib/organizationUtils";
 
 export async function GET(request) {
     try {
@@ -19,16 +20,19 @@ export async function GET(request) {
             });
         }
 
-        // If user is an organization, also fetch organization data
         let organizationData = null;
         if (user.role === 'organization') {
+            organizationData = await Organization.findById(userId);
+        }
+
+        if (!organizationData) {
             organizationData = await Organization.findById(userId);
         }
 
         return NextResponse.json({
             success: true, 
             user: user,
-            organization: organizationData
+            organization: serializeOrganization(organizationData)
         });
     } catch (error) {
         return NextResponse.json({

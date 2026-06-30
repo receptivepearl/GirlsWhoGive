@@ -4,6 +4,7 @@ import User from "@/models/User";
 import AdminNotification from "@/models/AdminNotification";
 import { getAuth } from "@clerk/nextjs/server";
 import connectDB from "@/config/db";
+import { serializeOrganization } from "@/lib/organizationUtils";
 
 export async function POST(request) {
     try {
@@ -112,7 +113,7 @@ export async function POST(request) {
             message: requiresApproval
                 ? 'Registration submitted. Your account will be activated after platform administrator approval.'
                 : 'Organization created successfully',
-            organization: organization,
+            organization: serializeOrganization(organization),
             pendingApproval: requiresApproval,
         });
 

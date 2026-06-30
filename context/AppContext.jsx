@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useUser, useAuth } from "@clerk/nextjs";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { serializeOrganization } from "@/lib/organizationUtils";
 
 export const AppContext = createContext();
 
@@ -22,9 +23,15 @@ export const AppContextProvider = (props) => {
     const [organizations, setOrganizations] = useState([])
     const [donations, setDonations] = useState([])
     const [loading, setLoading] = useState(false)
+    const [userDataLoaded, setUserDataLoaded] = useState(false)
 
     const fetchUserData = async () => {
-        if (!user) return null;
+        if (!user) {
+            setUserDataLoaded(true)
+            return null
+        }
+
+        setUserDataLoaded(false)
         
         try {
             const token = await getToken()
@@ -33,9 +40,10 @@ export const AppContextProvider = (props) => {
             })
 
             if (data.success) {
+                const organization = serializeOrganization(data.organization)
                 setUserData(data.user)
-                setUserRole(data.user.role || 'donor')
-                setOrganizationProfile(data.organization || null)
+                setUserRole(organization ? 'organization' : (data.user.role || 'donor'))
+                setOrganizationProfile(organization)
                 return data
             }
 
@@ -49,6 +57,8 @@ export const AppContextProvider = (props) => {
             setUserRole(null)
             setOrganizationProfile(null)
             return null
+        } finally {
+            setUserDataLoaded(true)
         }
     }
 
@@ -132,8 +142,8 @@ export const AppContextProvider = (props) => {
             })
             if (data.success) {
                 setUserRole('organization')
-                setOrganizationProfile(data.organization)
-                return { ...data.organization, pendingApproval: data.pendingApproval }
+                setOrganizationProfile(serializeOrganization(data.organization))
+                return { ...serializeOrganization(data.organization), pendingApproval: data.pendingApproval }
             }
         } catch (error) {
             console.error('Error creating organization:', error)
@@ -169,6 +179,7 @@ export const AppContextProvider = (props) => {
             setOrganizationProfile(null)
             setDonations([])
             setOrganizations([])
+            setUserDataLoaded(true)
         }
     }, [user])
 
@@ -181,7 +192,7 @@ export const AppContextProvider = (props) => {
     const value = {
         user, getToken,
         router,
-        userData, userRole, organizationProfile,
+        userData, userRole, organizationProfile, userDataLoaded,
         organizations, donations,
         loading, setLoading,
         fetchUserData, createUser,

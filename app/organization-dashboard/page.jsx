@@ -5,16 +5,19 @@ import Image from "next/image";
 import EnhancedNavbar from "@/components/EnhancedNavbar";
 import Footer from "@/components/Footer";
 import { useAppContext } from "@/context/AppContext";
+import { useAuth } from "@clerk/nextjs";
 import axios from "axios";
 import { DONATION_TYPES, DONATION_TYPE_CONFIG } from "@/config/donationTypes";
 import { OngoingDrivesPanel, AllDrivesPanel, DashboardDriveSection, OngoingDrivesSummary } from "@/components/OrganizationDrivePanel";
 import OrganizationEditDetailsModal from "@/components/OrganizationEditDetailsModal";
 import toast from "react-hot-toast";
 import { MISSION_STATEMENT } from "@/config/missionStatement";
+import { getOrganizationDisplayName } from "@/lib/organizationUtils";
 
 const OrganizationDashboard = () => {
   const router = useRouter();
-  const { user, userRole, getToken, organizationProfile } = useAppContext();
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user, userRole, getToken, organizationProfile, userDataLoaded } = useAppContext();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [organizationData, setOrganizationData] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -37,25 +40,41 @@ const OrganizationDashboard = () => {
   const [showEditDetails, setShowEditDetails] = useState(false);
 
   const activeOrganization = organizationData || organizationProfile;
-  const organizationDisplayName = activeOrganization?.name?.trim() || '';
+  const organizationDisplayName = getOrganizationDisplayName(activeOrganization);
+
+  useEffect(() => {
+    if (organizationProfile) {
+      setOrganizationData((prev) => {
+        if (prev?.name?.trim()) return prev;
+        return organizationProfile;
+      });
+    }
+  }, [organizationProfile]);
 
   // Redirect if not authenticated or not an organization
   useEffect(() => {
-    // Wait a bit for userRole to load before redirecting
-    if (!user) {
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
       router.push('/connect?role=organization');
       return;
     }
-    // Only redirect if userRole is explicitly set and not organization
-    // This prevents premature redirects while userRole is still loading
-    if (userRole !== null && userRole !== undefined && userRole !== 'organization') {
-      router.push('/');
+
+    if (!userDataLoaded) return;
+
+    if (userRole === 'organization' && !organizationProfile && !organizationData) {
+      router.push('/connect?role=organization');
       return;
     }
-  }, [user, userRole, router]);
+
+    // Only redirect if userRole is explicitly set and not organization
+    if (userRole !== null && userRole !== undefined && userRole !== 'organization') {
+      router.push('/');
+    }
+  }, [isLoaded, isSignedIn, userRole, userDataLoaded, router]);
 
   const loadData = async () => {
-    if (!user) return;
+    if (!isSignedIn) return;
 
     try {
       const token = await getToken();
@@ -142,7 +161,7 @@ const OrganizationDashboard = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!isLoaded || !isSignedIn || !userDataLoaded) return;
 
     loadData();
 
@@ -150,7 +169,7 @@ const OrganizationDashboard = () => {
     const interval = setInterval(loadData, 30000);
 
     return () => clearInterval(interval);
-  }, [user, organizationProfile?._id]);
+  }, [isLoaded, isSignedIn, userDataLoaded, organizationProfile?._id]);
 
   const handleSubmissionAction = async (orderId, action) => {
     try {
@@ -585,7 +604,7 @@ const OrganizationDashboard = () => {
     </div>
   );
 
-  if (loading) {
+  if (!isLoaded || (isSignedIn && !userDataLoaded) || loading) {
     return (
       <>
         <EnhancedNavbar />
@@ -632,7 +651,10 @@ const OrganizationDashboard = () => {
               </h1>
               <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
                 <p className="text-lg text-gray-600">
-                  Welcome, <span className="font-semibold text-gray-900">{organizationDisplayName || 'your chapter'}</span>
+                  Welcome,{' '}
+                  <span className="font-semibold text-gray-900">
+                    {organizationDisplayName || '...'}
+                  </span>
                 </p>
                 {activeOrganization && (
                   <button

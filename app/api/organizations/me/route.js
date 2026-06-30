@@ -2,6 +2,7 @@ import { getAuth } from "@clerk/nextjs/server";
 import connectDB from "@/config/db";
 import Organization from "@/models/Organization";
 import { NextResponse } from "next/server";
+import { serializeOrganization } from "@/lib/organizationUtils";
 
 const EDITABLE_FIELDS = [
     'name',
@@ -44,7 +45,7 @@ export async function GET(request) {
 
         return NextResponse.json({
             success: true,
-            organization: organization
+            organization: serializeOrganization(organization)
         });
 
     } catch (error) {
@@ -124,7 +125,7 @@ export async function PUT(request) {
         return NextResponse.json({
             success: true,
             message: 'Organization updated successfully',
-            organization: organization
+            organization: serializeOrganization(organization)
         });
 
     } catch (error) {
