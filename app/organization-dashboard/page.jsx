@@ -301,7 +301,7 @@ const OrganizationDashboard = () => {
     </div>
   );
 
-  const DashboardContent = () => (
+  const renderDashboardContent = () => (
     <div className="space-y-8">
       {/* Stats Cards */}
       <div className={`grid gap-6 ${isOrgAdmin ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
@@ -406,7 +406,7 @@ const OrganizationDashboard = () => {
     </div>
   );
 
-  const OngoingDrivesContent = () => (
+  const renderOngoingDrivesContent = () => (
     <OngoingDrivesPanel
       drives={ongoingDriveEvents}
       showOrgLabel={isOrgAdmin}
@@ -414,7 +414,7 @@ const OrganizationDashboard = () => {
     />
   );
 
-  const AllDrivesContent = () => (
+  const renderAllDrivesContent = () => (
     <AllDrivesPanel
       drives={driveEvents}
       showOrgLabel={isOrgAdmin}
@@ -422,7 +422,7 @@ const OrganizationDashboard = () => {
     />
   );
 
-  const PendingApprovalContent = () => (
+  const renderPendingApprovalContent = () => (
     <div className="max-w-2xl mx-auto bg-white/70 backdrop-blur-sm rounded-3xl p-10 shadow-lg border border-purple-200 text-center">
       <div className="text-6xl mb-6">{isRejected ? '❌' : '⏳'}</div>
       <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -691,7 +691,7 @@ const OrganizationDashboard = () => {
           </div>
 
           {(isPendingApproval || isRejected) ? (
-            <PendingApprovalContent />
+            renderPendingApprovalContent()
           ) : (
           <>
           {/* Tabs */}
@@ -731,10 +731,10 @@ const OrganizationDashboard = () => {
           </div>
 
           {/* Content */}
-          {activeTab === 'dashboard' ? <DashboardContent /> :
-           activeTab === 'ongoing-drives' ? <OngoingDrivesContent /> :
-           activeTab === 'all-drives' ? <AllDrivesContent /> :
-           <DashboardContent />}
+          {activeTab === 'dashboard' ? renderDashboardContent() :
+           activeTab === 'ongoing-drives' ? renderOngoingDrivesContent() :
+           activeTab === 'all-drives' ? renderAllDrivesContent() :
+           renderDashboardContent()}
           </>
           )}
         </div>

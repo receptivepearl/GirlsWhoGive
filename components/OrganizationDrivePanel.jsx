@@ -369,13 +369,13 @@ export function DashboardDriveSection({
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          {canCreateDrives && (
+          {canCreateDrives && !showForm && (
             <button
               type="button"
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => setShowForm(true)}
               className="px-5 py-2.5 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors text-sm"
             >
-              {showForm ? 'Cancel' : '+ Create New Drive'}
+              + Create New Drive
             </button>
           )}
           {(pastDriveCount > 0 || !canCreateDrives) && onViewAllDrives && (
